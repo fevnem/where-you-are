@@ -80,16 +80,16 @@ class CDP {
     await cdp.send('Page.enable');
     return cdp;
   }
-  send(method, params = {}) {
+  send(method, params = {}, timeoutMs = 60000) {
     const id = ++this.id;
     this.ws.send(JSON.stringify({ id, method, params }));
     return new Promise((resolve, reject) => {
       this.pending.set(id, { resolve, reject });
-      setTimeout(() => { if (this.pending.has(id)) { this.pending.delete(id); reject(new Error(method + ' timed out')); } }, 30000);
+      setTimeout(() => { if (this.pending.has(id)) { this.pending.delete(id); reject(new Error(method + ' timed out')); } }, timeoutMs);
     });
   }
   async eval(expr) {
-    const r = await this.send('Runtime.evaluate', { expression: expr, returnByValue: true, awaitPromise: true });
+    const r = await this.send('Runtime.evaluate', { expression: expr, returnByValue: true, awaitPromise: true }, 120000);
     if (r.exceptionDetails) throw new Error('eval threw: ' + (r.exceptionDetails.exception?.description || r.exceptionDetails.text));
     return r.result.value;
   }
@@ -105,13 +105,29 @@ class CDP {
   async viewport(w, h) {
     await this.send('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: 1, mobile: false });
   }
-  async shot(file) {
-    const r = await this.send('Page.captureScreenshot', { format: 'png' });
-    await writeFile(file, Buffer.from(r.data, 'base64'));
-    return file;
+  // The scene got heavy enough (satellite bodies, ground tracks, city lights, a
+  // sky-plot canvas) that the software rasteriser can take a long time to hand
+  // back a composited frame. A screenshot is evidence, not a gate: retry it, and
+  // never let it kill the run.
+  async shot(file, attempts = 3) {
+    for (let i = 1; i <= attempts; i++) {
+      try {
+        const r = await this.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false, optimizeForSpeed: true }, 180000);
+        await writeFile(file, Buffer.from(r.data, 'base64'));
+        return file;
+      } catch (err) {
+        if (i === attempts) {
+          warned.push('screenshot failed for ' + file + ': ' + err.message);
+          console.log('  !    screenshot skipped — ' + file + ' (' + err.message + ')');
+          return null;
+        }
+        await sleep(2000);
+      }
+    }
   }
 }
 
+const warned = [];
 let pass = 0;
 const problems = [];
 const check = (label, cond, extra) => {

@@ -140,6 +140,34 @@ async function boot() {
     } catch (e) { console.warn('[polish apply ' + file + ']', e); }
   }
 
+  // ---- scene dressing ----
+  // One light for the whole world, at a three-quarter angle, so the Earth reads
+  // as a lit planet with a terminator instead of a flat disc, and the night side
+  // has something to show. city.js exists but nothing consumed it: own it here.
+  const SUN = (() => { const v = [0.62, 0.33, 0.71]; const n = Math.hypot(v[0], v[1], v[2]); return v.map((x) => x / n); })();
+  state.sun = SUN;
+  try { state.earth?.setSun?.(SUN); } catch (e) { console.warn('[sun]', e); }
+  try { globe.setSun?.(SUN); } catch { /* optional */ }
+  if (polish.createCityLights) {
+    try {
+      state.city = polish.createCityLights(stage, {});
+      state.city?.setSun?.(SUN);
+    } catch (e) { console.warn('[city]', e); }
+  }
+  stage.onFrame.push((t) => {
+    try { state.earth?.update?.(t); } catch { /* optional */ }
+    try { state.city?.update?.(t, state.sun); } catch { /* optional */ }
+  });
+
+  // A fixed HUD must not cover prose on a small screen: start it collapsed there.
+  const mmHandle = state['./ui/minimap.js'];
+  if (mmHandle?.node && window.innerWidth < 1000) {
+    const btn = mmHandle.node.querySelector('#mm-toggle');
+    if (btn && !mmHandle.node.classList.contains('is-collapsed')) {
+      try { btn.click(); } catch { /* optional */ }
+    }
+  }
+
   window.APP = {
     stage, camera, globe, stars, chapters, state, polish,
     activate, pickActive, helpers: { geo, kepler, tri, vocab, P }

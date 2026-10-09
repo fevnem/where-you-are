@@ -175,6 +175,22 @@ body {
 .rail-num { font-family: var(--mono); font-size: 0.7rem; opacity: 0.7; }
 .rail-title { line-height: 1.25; }
 
+/* ---------- sky HUD ---------- */
+
+/* js/ui/minimap.js mounts a fixed panel. It must never sit on the reading
+   column: dock it in the gutter between the story and the chapter rail. The
+   element-qualified selector out-specifies the module's own injected `#mm-panel`
+   rule, so no !important is needed. */
+html body #mm-panel {
+  left: auto;
+  right: calc(var(--rail-w, 13.5rem) + 1.25rem);
+  bottom: 1.25rem;
+}
+
+@media (max-width: 1000px) {
+  html body #mm-panel { right: 0.6rem; bottom: 0.6rem; width: 11.5rem; }
+}
+
 /* ---------- focus ---------- */
 
 :focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; border-radius: 2px; }

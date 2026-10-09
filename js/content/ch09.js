@@ -312,6 +312,8 @@ export function createScene(ctx) {
   return {
     update(t) { compute(t); },
     onChange() { compute(0); },
-    dispose() { const slot = document.querySelector('.readout-holder.ch09'); if (slot) slot.remove(); }
+    // Actors are removed by ctx.own(). The readout holder is left in place so the
+    // page height does not change when this chapter scrolls out of view.
+    dispose() {}
   };
 }

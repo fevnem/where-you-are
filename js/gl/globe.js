@@ -66,6 +66,7 @@ export function createGlobe(stage, opts = {}) {
     group,
     setGrid(on) { grid.visible = !!on; equator.visible = !!on; return this; },
     setCoast(on) { coast.visible = !!on; return this; },
+    setSurface(on) { surface.visible = !!on; return this; },
     setSun(dir) {
       surface.draw = surface.draw.bind(surface);
       group.surface.constructor; // no-op: uniforms are read per draw

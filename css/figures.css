@@ -1,0 +1,561 @@
+/* figures.css — the instrument-panel layer for controls, readouts and checks.
+   Loaded after explainer.css: it restyles the chapter furniture so every panel
+   reads as a measuring instrument rather than a web form. No @import, no
+   external fonts or images — everything here is drawn with gradients, borders
+   and shadows so the page stays a single static artifact. */
+
+/* ============================================================
+   1. The panel — a shallow glass slab with a hairline top highlight
+   ============================================================ */
+
+.controls-holder,
+.readout-holder,
+.checks-holder,
+.figure-holder {
+  --glass: linear-gradient(180deg, rgba(17, 24, 37, 0.92), rgba(9, 13, 21, 0.9));
+  --hairline: inset 0 1px 0 0 rgba(255, 255, 255, 0.055);
+  position: relative;
+  margin: 2rem 0 0;
+  padding: 1.05rem 1.1rem 1.15rem;
+  background: var(--glass);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: var(--hairline), 0 20px 44px -30px rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(10px) saturate(1.15);
+  -webkit-backdrop-filter: blur(10px) saturate(1.15);
+}
+
+/* a quiet corner tick so the slab reads as an instrument face, not a card */
+.controls-holder::after,
+.checks-holder::after,
+.readout-holder::after {
+  content: "";
+  position: absolute;
+  top: 0.55rem;
+  right: 0.6rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-top: 1px solid rgba(111, 178, 255, 0.35);
+  border-right: 1px solid rgba(111, 178, 255, 0.35);
+  pointer-events: none;
+}
+
+/* ---------- panel titles ---------- */
+
+.controls-title,
+.checks-title,
+.readout-title {
+  position: relative;
+  font-family: var(--mono);
+  font-size: var(--fs-100);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0 0 0.9rem;
+  padding-left: 0.75rem;
+}
+
+.controls-title::before,
+.checks-title::before,
+.readout-title::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.1em;
+  bottom: 0.1em;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--signal);
+}
+
+/* ============================================================
+   2. Controls
+   ============================================================ */
+
+.controls { display: grid; gap: 1.15rem; }
+
+.control { display: grid; gap: 0.1rem; }
+
+.control-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.control-label {
+  font-family: var(--mono);
+  font-size: var(--fs-100);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.control-value {
+  font-family: var(--mono);
+  font-size: var(--fs-200);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  color: var(--amber);
+  background: rgba(255, 201, 105, 0.09);
+  border: 1px solid rgba(255, 201, 105, 0.2);
+  border-radius: 5px;
+  padding: 0.06rem 0.42rem;
+  min-width: 3.6rem;
+  text-align: right;
+  line-height: 1.5;
+}
+
+.hint {
+  font-family: var(--mono);
+  font-size: var(--fs-100);
+  line-height: 1.5;
+  color: var(--ink-faint);
+  margin: 0.4rem 0 0;
+}
+
+/* ---------- slider: a scale, not a form control ---------- */
+
+.control input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 1.6rem;
+  margin: 0.4rem 0 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.control input[type="range"]::-webkit-slider-runnable-track {
+  height: 0.5rem;
+  border-radius: 999px;
+  background:
+    repeating-linear-gradient(90deg,
+      rgba(159, 176, 198, 0.3) 0 1px,
+      transparent 1px 12.5%),
+    linear-gradient(180deg, #121a29, #090f18);
+  box-shadow:
+    inset 0 0 0 1px var(--line),
+    inset 0 1px 3px rgba(0, 0, 0, 0.65);
+}
+
+.control input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 0.8rem;
+  height: 1.5rem;
+  margin-top: -0.5rem;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #dcecff 0%, #8fc0ff 55%, #5a97e0 100%);
+  border: 1px solid #2b6bb5;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.35),
+    0 1px 4px rgba(0, 0, 0, 0.65);
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+}
+
+.control input[type="range"]:hover::-webkit-slider-thumb {
+  background: linear-gradient(180deg, #eef7ff 0%, #a9d0ff 55%, #6fb2ff 100%);
+}
+
+.control input[type="range"]:active::-webkit-slider-thumb {
+  transform: scaleY(1.06);
+  box-shadow:
+    0 0 0 3px rgba(111, 178, 255, 0.28),
+    0 1px 6px rgba(0, 0, 0, 0.7);
+}
+
+.control input[type="range"]:focus-visible { outline: none; }
+
+.control input[type="range"]:focus-visible::-webkit-slider-thumb {
+  box-shadow:
+    0 0 0 3px rgba(111, 178, 255, 0.55),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.4),
+    0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+.control input[type="range"]:focus-visible::-webkit-slider-runnable-track {
+  box-shadow:
+    inset 0 0 0 1px var(--signal),
+    inset 0 1px 3px rgba(0, 0, 0, 0.65),
+    0 0 8px rgba(111, 178, 255, 0.35);
+}
+
+.control input[type="range"]:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.75) brightness(0.7);
+  opacity: 0.6;
+}
+
+/* Firefox mirrors — same instrument, different engine */
+.control input[type="range"]::-moz-range-track {
+  height: 0.5rem;
+  border-radius: 999px;
+  background:
+    repeating-linear-gradient(90deg,
+      rgba(159, 176, 198, 0.3) 0 1px,
+      transparent 1px 12.5%),
+    linear-gradient(180deg, #121a29, #090f18);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.control input[type="range"]::-moz-range-thumb {
+  width: 0.8rem;
+  height: 1.5rem;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #dcecff, #5a97e0);
+  border: 1px solid #2b6bb5;
+}
+
+.control input[type="range"]:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 3px rgba(111, 178, 255, 0.55);
+}
+
+/* ---------- toggle switch ---------- */
+
+.control input[type="checkbox"] {
+  -webkit-appearance: none;
+  appearance: none;
+  position: relative;
+  width: 2.95rem;
+  height: 1.55rem;
+  margin: 0.45rem 0 0;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #0c1421, #080d16);
+  border: 1px solid var(--line);
+  cursor: pointer;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.65);
+  transition: background 0.18s, border-color 0.18s;
+}
+
+.control input[type="checkbox"]::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0.2rem;
+  width: 1.05rem;
+  height: 1.05rem;
+  border-radius: 50%;
+  transform: translateY(-50%);
+  background: linear-gradient(180deg, #93a9c3, #5f7691);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  transition: left 0.18s ease, background 0.18s;
+}
+
+.control input[type="checkbox"]:hover { border-color: var(--signal-deep); }
+
+.control input[type="checkbox"]:checked {
+  background: linear-gradient(180deg, rgba(111, 178, 255, 0.38), rgba(43, 107, 181, 0.34));
+  border-color: var(--signal);
+}
+
+.control input[type="checkbox"]:checked::before {
+  left: calc(100% - 1.25rem);
+  background: linear-gradient(180deg, #eaf5ff, #a9d0ff);
+}
+
+.control input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+
+.control input[type="checkbox"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---------- select ---------- */
+
+.control select {
+  width: 100%;
+  margin: 0.45rem 0 0;
+  background: linear-gradient(180deg, rgba(17, 24, 37, 0.95), rgba(10, 15, 24, 0.95));
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.5rem 0.6rem;
+  font-family: var(--mono);
+  font-size: var(--fs-200);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: border-color 0.15s;
+}
+
+.control select:hover { border-color: var(--signal-deep); }
+.control select:focus-visible { border-color: var(--signal); }
+.control select:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ---------- button ---------- */
+
+.btn {
+  font-family: var(--mono);
+  font-size: var(--fs-200);
+  letter-spacing: 0.04em;
+  color: #dcebff;
+  background: linear-gradient(180deg, rgba(111, 178, 255, 0.18), rgba(43, 107, 181, 0.14));
+  border: 1px solid rgba(111, 178, 255, 0.4);
+  border-radius: 6px;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition: background 0.15s, border-color 0.15s, transform 0.08s, box-shadow 0.15s;
+}
+
+.btn:hover {
+  background: linear-gradient(180deg, rgba(111, 178, 255, 0.28), rgba(43, 107, 181, 0.22));
+  border-color: var(--signal);
+}
+
+.btn:active { transform: translateY(1px); box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.45); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ---------- focus, for every control in the panel ---------- */
+
+.controls-holder :focus-visible,
+.checks-holder :focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   3. Readout cells — little gauges
+   ============================================================ */
+
+.readout {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(8rem, 100%), 1fr));
+  gap: 0.6rem 0.7rem;
+}
+
+.cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.5rem 0.6rem 0.55rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.012));
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+
+/* the gauge face: a hairline ruler across the top of every cell */
+.cell::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  background: repeating-linear-gradient(90deg,
+    rgba(111, 178, 255, 0.6) 0 2px,
+    transparent 2px 8px);
+  opacity: 0.45;
+}
+
+.cell-label {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.cell-value {
+  font-family: var(--mono);
+  font-size: var(--fs-400);
+  line-height: 1.15;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  overflow-wrap: anywhere;
+}
+
+/* ============================================================
+   4. Your-turn checks
+   ============================================================ */
+
+.check + .check {
+  margin-top: 1.4rem;
+  padding-top: 1.4rem;
+  border-top: 1px dashed var(--line);
+}
+
+.check-q {
+  font-size: var(--fs-300);
+  line-height: 1.5;
+  color: var(--ink);
+  margin: 0 0 0.9rem;
+}
+
+.check-options { display: grid; gap: 0.5rem; }
+
+.option {
+  display: grid;
+  grid-template-columns: 1.6rem 1fr;
+  gap: 0.65rem;
+  align-items: baseline;
+  text-align: left;
+  font: inherit;
+  font-size: var(--fs-200);
+  line-height: 1.45;
+  color: var(--ink-dim);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0.012));
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  padding: 0.6rem 0.75rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+/* resting -> hover -> active */
+.option:hover:not(:disabled) {
+  border-color: var(--signal-deep);
+  color: var(--ink);
+  background: linear-gradient(180deg, rgba(111, 178, 255, 0.1), rgba(111, 178, 255, 0.04));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.option:active:not(:disabled) { transform: translateY(1px); }
+.option:disabled { cursor: default; }
+
+.option-mark {
+  align-self: start;
+  width: 1.5rem;
+  height: 1.5rem;
+  line-height: 1.5rem;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--ink-faint);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.option-text { min-width: 0; }
+
+/* chosen-right */
+.option.is-right {
+  border-color: rgba(99, 217, 154, 0.55);
+  background: linear-gradient(180deg, rgba(99, 217, 154, 0.16), rgba(99, 217, 154, 0.06));
+  color: #dffaec;
+  box-shadow: inset 0 1px 0 rgba(99, 217, 154, 0.28);
+}
+
+.option.is-right .option-mark {
+  color: #06301c;
+  background: var(--green);
+  border-color: var(--green);
+  font-weight: 600;
+}
+
+/* chosen-wrong */
+.option.is-wrong {
+  border-color: rgba(255, 138, 122, 0.55);
+  background: linear-gradient(180deg, rgba(255, 138, 122, 0.14), rgba(255, 138, 122, 0.05));
+  color: #ffe1db;
+  box-shadow: inset 0 1px 0 rgba(255, 138, 122, 0.28);
+}
+
+.option.is-wrong .option-mark {
+  color: #3a0f0a;
+  background: var(--rose);
+  border-color: var(--rose);
+  font-weight: 600;
+}
+
+/* the options that were not chosen once the answer is locked in */
+.option:disabled:not(.is-right):not(.is-wrong) { opacity: 0.55; }
+
+/* ---------- the explanation panel ---------- */
+
+.check-why {
+  margin: 0.9rem 0 0;
+  font-size: var(--fs-200);
+  line-height: 1.55;
+  color: var(--ink-dim);
+  padding: 0.75rem 0.9rem 0.8rem 0.95rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line);
+  border-radius: 0 8px 8px 0;
+}
+
+.check-why.is-right {
+  border-color: rgba(99, 217, 154, 0.3);
+  border-left-color: var(--green);
+  background: linear-gradient(180deg, rgba(99, 217, 154, 0.08), rgba(99, 217, 154, 0.02));
+}
+
+.check-why.is-wrong {
+  border-color: rgba(255, 138, 122, 0.3);
+  border-left-color: var(--rose);
+  background: linear-gradient(180deg, rgba(255, 138, 122, 0.07), rgba(255, 138, 122, 0.02));
+}
+
+.check-why strong { color: var(--ink); }
+.check-why[hidden] { display: none; }
+
+/* ============================================================
+   5. Figures
+   ============================================================ */
+
+figure { margin: 1.4rem 0; }
+
+figcaption {
+  font-family: var(--mono);
+  font-size: var(--fs-100);
+  line-height: 1.5;
+  color: var(--ink-faint);
+  margin-top: 0.55rem;
+  padding-left: 0.7rem;
+  border-left: 2px solid var(--line);
+}
+
+figure > svg,
+figure > canvas,
+.figure-holder svg,
+.figure-holder canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.figure-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr));
+  gap: 1rem;
+}
+
+/* ============================================================
+   6. Responsive — deliberate at 1440, tappable at 390
+   ============================================================ */
+
+@media (max-width: 900px) {
+  .readout { grid-template-columns: repeat(auto-fill, minmax(min(7rem, 100%), 1fr)); }
+}
+
+@media (max-width: 430px) {
+  .controls-holder,
+  .readout-holder,
+  .checks-holder,
+  .figure-holder {
+    padding: 0.9rem 0.85rem 1rem;
+    border-radius: 10px;
+  }
+
+  .control-head { flex-wrap: wrap; }
+  .control-value { min-width: 0; }
+
+  /* two fixed gauge columns: never wider than the slab */
+  .readout { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cell-value { font-size: var(--fs-300); }
+
+  .option { grid-template-columns: 1.5rem 1fr; padding: 0.55rem 0.6rem; }
+}
