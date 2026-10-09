@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where You Are — how GPS actually finds you</title>
+<meta name="description" content="An explorable explanation of GPS: one-way signals, spheres that shrink, a clock that cannot be trusted, and the reason four is the magic number.">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#05070c">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/explainer.css">
+</head>
+<body>
+  <a class="skip" href="#prose">Skip to the text</a>
+
+  <div id="sky" aria-hidden="true">
+    <canvas id="gl"></canvas>
+    <div id="sky-hint">drag to turn · scroll to zoom</div>
+  </div>
+
+  <main id="story">
+    <header id="masthead">
+      <p class="kicker">An explorable explanation</p>
+      <h1>Where You Are</h1>
+      <p class="lede">Your phone cannot see a satellite, hear a tower, or read a map. It listens
+      to four clocks falling past it at three kilometres a second — and from the times alone,
+      works out where on Earth it is. This is how.</p>
+      <p class="meta" id="meta-line">loading the sky…</p>
+    </header>
+    <div id="chapters"></div>
+    <footer id="colophon">
+      <p>Built as a single static page: no dependencies, no build step, no tracking. The maths is
+      real — orbital radii, the speed of light, the 38 microsecond relativistic drift are the
+      actual numbers, and the position solver converges the way a receiver does.</p>
+    </footer>
+  </main>
+
+  <nav id="rail" aria-label="Chapters"></nav>
+
+  <noscript><p style="padding:2rem">This explanation renders 3D geometry with WebGL2 and needs JavaScript enabled.</p></noscript>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
