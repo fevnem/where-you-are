@@ -144,13 +144,18 @@ async function boot() {
   }
 
   // ---- scene dressing ----
-  // One light for the whole world, at a three-quarter angle, so the Earth reads
-  // as a lit planet with a terminator instead of a flat disc, and the night side
-  // has something to show. city.js exists but nothing consumed it: own it here.
-  const SUN = (() => { const v = [0.62, 0.33, 0.71]; const n = Math.hypot(v[0], v[1], v[2]); return v.map((x) => x / n); })();
+  // One light for the whole world, off to the side of the default camera, so the
+  // Earth shows a real terminator instead of a uniformly dim disc. The material's
+  // albedo is physical (deep ocean ~0.012), so it also needs screen gain.
+  const SUN = (() => { const v = [-0.45, 0.45, 0.77]; const n = Math.hypot(v[0], v[1], v[2]); return v.map((x) => x / n); })();
   state.sun = SUN;
   try { state.earth?.setSun?.(SUN); } catch (e) { console.warn('[sun]', e); }
+  try { state.earth?.setExposure?.(4.6); } catch { /* older material */ }
+  try { state.earth?.setTerminatorSoftness?.(0.30); } catch { /* optional */ }
   try { globe.setSun?.(SUN); } catch { /* optional */ }
+  // The lit surface is the subject; the graticule was reading as a wireframe demo.
+  // Continents stay (they are information), the lat/long grid goes.
+  try { globe.setGrid?.(false); } catch { /* optional */ }
   if (polish.createCityLights) {
     try {
       state.city = polish.createCityLights(stage, {});

@@ -54,6 +54,7 @@ uniform vec4 color;
 uniform vec3 sunDir;
 uniform vec3 cameraPos;
 uniform float softness;
+uniform float exposure;
 out vec4 outColor;
 
 /* ---- value noise, purely procedural, no textures ---- */
@@ -117,7 +118,7 @@ void main() {
   float fres = pow(1.0 - max(dot(n, v), 0.0), 3.5);
   col += fres * vec3(0.30, 0.50, 0.92) * (0.25 + 0.85 * lam);
 
-  outColor = vec4(col, color.a);
+  outColor = vec4(col * exposure, color.a);
 }
 `;
 
@@ -186,6 +187,10 @@ export function createEarth(stage, opts = {}) {
 
   /* initial sun, roughly matching the globe default (0.75, 0.25, 0.6) */
   let softness = opts.softness ?? 0.22;
+  /* Photometric gain. The procedural albedo is deliberately physical — deep ocean
+     is ~0.012 — so at gain 1 the planet renders far darker than a screen wants.
+     The host sets this to bring the lit hemisphere into a readable range. */
+  let exposure = opts.exposure ?? 1.0;
   {
     const d = opts.sun ?? [0.75, 0.25, 0.6];
     const l = Math.hypot(d[0], d[1], d[2]) || 1;
@@ -206,6 +211,7 @@ export function createEarth(stage, opts = {}) {
       gl.uniform3fv(surfProg.u('sunDir'), sunVec);
       gl.uniform3fv(surfProg.u('cameraPos'), camVec);
       gl.uniform1f(surfProg.u('softness'), softness);
+      gl.uniform1f(surfProg.u('exposure'), exposure);
       gl.bindVertexArray(surfVao);
       gl.drawElements(gl.TRIANGLES, surfCount, gl.UNSIGNED_SHORT, 0);
       gl.bindVertexArray(null);
@@ -283,6 +289,13 @@ export function createEarth(stage, opts = {}) {
     /** Softness of the Lambert-to-warm terminator, in units of n·sun. */
     setTerminatorSoftness(k) {
       softness = Math.max(0.002, Number(k) || 0);
+      return this;
+    },
+
+    /** Photometric gain for the lit surface (1 = physically dark, ~3 = screen). */
+    setExposure(k) {
+      exposure = Math.max(0, Number(k));
+      if (!Number.isFinite(exposure)) exposure = 1;
       return this;
     },
 
