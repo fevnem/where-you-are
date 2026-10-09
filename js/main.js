@@ -5,6 +5,7 @@
 import { createStage } from './engine/stage.js';
 import { createCamera, bindCamera } from './engine/camera.js';
 import { createGlobe, createMarker } from './gl/globe.js';
+import { createStarfield } from './gl/starfield.js';
 import { createConstellation, createStation } from './gl/constellation.js';
 import { createRangeSpheres } from './gl/spheres.js';
 import * as P from './gl/primitives.js';
@@ -24,8 +25,39 @@ const camera = createCamera({ dist: 78, yaw: 0.9, pitch: 0.42, minDist: 7.2, max
 const tickKeys = bindCamera(canvas, camera, () => true);
 
 const globe = createGlobe(stage, { seg: 96 });
+const stars = createStarfield(stage, { count: 1800 });
 stage.camera = camera;
 stage.onFrame.push((t, dt) => { tickKeys(dt); camera.update(dt); });
+
+/* ------------------------------------------------------------------ *
+ * Optional visual modules. They live in their own files and are loaded
+ * if present — a missing or broken one is skipped, never fatal. This is
+ * what lets several authors work on the look of the page at once.
+ * ------------------------------------------------------------------ */
+
+const POLISH_SPEC = [
+  ['createGrain', './fx/grain.js'],
+  ['enhanceHero', './ui/hero.js'],
+  ['createRailTrack', './ui/railtrack.js'],
+  ['createLabels', './ui/labels.js'],
+  ['createGlowPool', './gl/glow.js'],
+  ['createTrails', './gl/trails.js'],
+  ['createCityLights', './gl/city.js'],
+  ['createEarth', './gl/earth-material.js']
+];
+
+async function loadPolish() {
+  const out = {};
+  for (const [name, file] of POLISH_SPEC) {
+    try {
+      const mod = await import(file);
+      if (typeof mod[name] === 'function') out[name] = mod[name];
+    } catch (err) {
+      console.warn('[polish] ' + file + ' not applied: ' + err.message);
+    }
+  }
+  return out;
+}
 
 /* ---------------- boot ---------------- */
 
@@ -47,14 +79,33 @@ const metaLine = $('#meta-line');
 boot();
 
 async function boot() {
-  const chapters = await loadChapters();
+  const [chapters, polish] = await Promise.all([loadChapters(), loadPolish()]);
   state.chapters = chapters;
+  state.polish = polish;
   buildArticle(chapters);
   buildRail(chapters);
   metaLine.textContent = chapters.length + ' chapters · ' + document.title.split(' — ')[0];
   observe();
+
+  // optional visual layers: each is applied only if its module exists
+  if (polish.createGrain) {
+    try { state.grain = polish.createGrain($('#grain')); } catch (e) { console.warn('[grain]', e); }
+  }
+  if (polish.enhanceHero) {
+    try { polish.enhanceHero({ chapters, state, stage, camera, globe }); } catch (e) { console.warn('[hero]', e); }
+  }
+  if (polish.createRailTrack) {
+    try { state.railtrack = polish.createRailTrack({ rail, chapters, state }); } catch (e) { console.warn('[rail]', e); }
+  }
+  if (polish.createEarth) {
+    try {
+      state.earth = polish.createEarth(stage, { globe, stars });
+      if (state.earth?.surfaceAdded) globe.setSurface(false);
+    } catch (e) { console.warn('[earth]', e); }
+  }
+
   window.APP = {
-    stage, camera, globe, chapters, state,
+    stage, camera, globe, stars, chapters, state, polish,
     activate, pickActive, helpers: { geo, kepler, tri, vocab, P }
   };
 }
@@ -197,8 +248,9 @@ function activate(ch) {
 function makeCtx(ch) {
   const owned = [];
   const params = ch.__controls ? ch.__controls.params : {};
+  const polish = state.polish ?? {};
   const ctx = {
-    stage, camera, globe, params, id: ch.id, owned,
+    stage, camera, globe, stars, params, id: ch.id, owned, polish,
     helpers: { geo, kepler, tri, vocab, P },
     /* geometry factories that register themselves for disposal */
     own(...actors) { actors.forEach((a) => a && owned.push(a)); return actors[0]; },
@@ -225,6 +277,12 @@ function makeCtx(ch) {
     world(p) { return p.map((v) => v * vocab.KM); }
   };
   ctx.geo = geo; ctx.kepler = kepler; ctx.tri = tri; ctx.vocab = vocab;
+  // optional extras, present only if their modules loaded
+  if (polish.createGlowPool) ctx.glow = polish.createGlowPool(stage, { max: 64 });
+  if (polish.createTrails) ctx.trails = polish.createTrails(stage, {});
+  if (polish.createCityLights) ctx.city = polish.createCityLights(stage, {});
+  if (polish.createLabels && !state.labels) state.labels = polish.createLabels(stage, camera);
+  if (state.labels) ctx.labels = state.labels;
   return ctx;
 }
 
