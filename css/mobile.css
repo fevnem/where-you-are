@@ -1,0 +1,341 @@
+/* ============================================================================
+   css/mobile.css — the phone and touch pass.
+   Loaded LAST (base -> theme -> explainer -> figures), so every rule here is a
+   deliberate override. Nothing lives outside a max-width / hover media query
+   except the touch-action declarations, so the 1440px desktop layout is never
+   re-flowed. No @import, no external fonts or images.
+
+   Sections
+     1. touch: instant taps, no sticky hover
+     2. the sticky sky on a phone
+     3. the reading column (full width, comfortable measure)
+     4. touch targets (>=44px) for controls and check options
+     5. the chapter rail, compact and readable
+     6. the sky HUD, docked clear of the reading column
+     7. telemetry / hero readouts wrap instead of clipping
+     8. figure and readout panels scroll sideways, never break the page
+   ============================================================================ */
+
+/* ---------------------------------------------------------------------------
+   1. Touch — no 300ms delay, no hover state that sticks after a tap.
+   ------------------------------------------------------------------------- */
+
+.rail-item,
+.railtrack-tick,
+.option,
+.btn,
+.control select,
+.control input[type="range"],
+.control input[type="checkbox"],
+#mm-toggle,
+.hero-cue {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(116, 180, 255, 0.16);
+}
+
+/* The sky keeps its own drag/zoom gesture. */
+#gl { touch-action: none; }
+
+@media (hover: none) {
+  /* A touch screen never clears :hover, so a hover-only affordance reads as
+     dead after a tap. Clear the hover paint and answer :active instead. */
+
+  .option:hover:not(:disabled) {
+    border-color: var(--line-soft);
+    color: var(--ink-dim);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.028), rgba(255, 255, 255, 0.012));
+    box-shadow: none;
+  }
+  .option:active:not(:disabled) {
+    border-color: var(--signal-deep);
+    color: var(--ink);
+    background: linear-gradient(180deg, rgba(111, 178, 255, 0.14), rgba(111, 178, 255, 0.05));
+  }
+
+  .btn:hover {
+    background: linear-gradient(180deg, rgba(111, 178, 255, 0.18), rgba(43, 107, 181, 0.14));
+    border-color: rgba(111, 178, 255, 0.4);
+  }
+  .btn:active {
+    border-color: var(--signal);
+    background: linear-gradient(180deg, rgba(111, 178, 255, 0.3), rgba(43, 107, 181, 0.24));
+  }
+
+  html body .rail-item:hover:not(.is-active) { color: var(--ink-faint); background: none; }
+  html body .rail-item:active { background: rgba(255, 255, 255, 0.05); }
+
+  /* railtrack / hero write their <style> at runtime, after this sheet, so these
+     two need to out-specify them (an id beats their class-only rules). */
+  html body #rail .railtrack-tick:hover:not(.is-active) { color: var(--ink-faint); background: none; }
+  html body #rail .railtrack-tick:active { background: rgba(255, 255, 255, 0.06); }
+
+  html body #masthead .hero-cue:hover { color: var(--ink-faint); }
+  html body #masthead .hero-cue:active { color: var(--ink-dim); }
+
+  .control select:hover { border-color: var(--line); }
+  .control input[type="checkbox"]:hover { border-color: var(--line); }
+
+  .control input[type="range"]:hover::-webkit-slider-thumb {
+    background: linear-gradient(180deg, #dcecff 0%, #8fc0ff 55%, #5a97e0 100%);
+  }
+  .control input[type="range"]:hover::-moz-range-thumb {
+    background: linear-gradient(180deg, #dcecff, #5a97e0);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   2-3. Sky + reading column, <=900px (tablets and phones)
+   ------------------------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  :root {
+    --m-rail: 3.9rem;      /* height the fixed bottom rail reserves */
+    --m-gutter: 1.15rem;   /* extra inset inside #story, on top of its 1rem margin */
+  }
+
+  /* iOS reports 100vh as the expanded (URL-bar-hidden) viewport, so a fixed
+     100vh sky is taller than the screen and its lower vignette is cut off.
+     dvh tracks the real viewport: a shorter, honest sticky sky. */
+  #sky { height: 100vh; height: 100dvh; }
+
+  /* "drag to turn · scroll to zoom" is a pointer affordance; on a phone the
+     reading column covers the canvas, so the cue would only mislead. */
+  #sky-hint { display: none; }
+
+  body {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* Full-width column, no wide gutter; the inset moves inside so the aim of a
+     tap is text, not margin. Bottom padding clears the fixed rail. */
+  #story {
+    padding: 0 var(--m-gutter) calc(30vh + var(--m-rail));
+    overflow-wrap: break-word;
+  }
+  #story .prose { overflow-wrap: break-word; }
+
+  html { scroll-padding-bottom: var(--m-rail); }
+}
+
+/* ---------------------------------------------------------------------------
+   4. Touch targets — every control and check option reaches 44px
+   ------------------------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  /* Buttons and check options: 44px minimum box. */
+  .btn {
+    min-height: 44px;
+    padding: 0.6rem 0.95rem;
+  }
+
+  .option {
+    min-height: 44px;
+    padding: 0.7rem 0.8rem;
+    align-items: start;
+  }
+
+  /* Selects: 44px tall whether or not the font renders short. */
+  .control select { min-height: 44px; }
+
+  /* Slider: the rail stays a hairline, the grab area does not. */
+  .control input[type="range"] { height: 44px; }
+  .control input[type="range"]::-webkit-slider-thumb {
+    width: 1.25rem;
+    height: 2rem;
+    margin-top: -0.75rem;
+  }
+  .control input[type="range"]::-moz-range-thumb {
+    width: 1.25rem;
+    height: 2rem;
+  }
+
+  /* Toggle: keep the 2.95x1.55rem instrument face, grow the hit box to 44px by
+     pushing the background into a transparent border (padding box) — the knob
+     is positioned against that same padding box, so nothing shifts. */
+  .control input[type="checkbox"] {
+    box-sizing: border-box;
+    width: 4.15rem;          /* 2.95 + 2*0.6 */
+    height: 2.75rem;         /* 1.55 + 2*0.6 = 44px */
+    margin-top: 0.55rem;
+    border: 0.6rem solid transparent;
+    background-clip: padding-box;
+  }
+
+  /* Rail controls and the HUD toggle are taps too. */
+  .rail-item { min-height: 44px; }
+  .railtrack-tick { min-height: 44px; }
+  html body #mm-toggle { min-height: 44px; }
+}
+
+/* ---------------------------------------------------------------------------
+   5. The chapter rail — a compact, readable strip along the bottom
+   ------------------------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  #rail {
+    max-height: 4.5rem;
+    padding: 0.35rem 0.6rem calc(0.35rem + env(safe-area-inset-bottom, 0px));
+    gap: 0.25rem;
+    border-top: 1px solid var(--line-soft);
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  .rail-item {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0.5rem 0.72rem;
+    font-size: var(--fs-200);
+  }
+
+  .rail-title { white-space: nowrap; }
+}
+
+/* ---------------------------------------------------------------------------
+   6. The sky HUD (minimap) — docked clear of prose and of the bottom rail
+   ------------------------------------------------------------------------- */
+
+@media (max-width: 1000px) {
+  html body #mm-panel {
+    right: 0.7rem;
+    bottom: 0.7rem;
+    width: min(11.5rem, calc(100vw - 1.6rem));
+    max-height: 62vh;
+  }
+  /* Expanded, it must not swallow the page: let the body scroll inside it. */
+  html body #mm-panel #mm-body {
+    max-height: 50vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  /* ui/minimap.js styles its caption as "#mm-caption" while the element only
+     carries the CLASS .mm-caption, so at runtime the note falls back to raw <p>
+     metrics — ~250px of 1rem/1.66 text inside a 164px panel. Give the note the
+     metrics the module meant. */
+  html body #mm-panel .mm-caption {
+    margin: 0.15rem 0 0;
+    font-family: var(--mono);
+    font-size: 0.6rem;
+    line-height: 1.35;
+    color: var(--ink-faint);
+  }
+}
+
+@media (max-width: 900px) {
+  html body #mm-panel {
+    right: 0.6rem;
+    bottom: calc(var(--m-rail) + 0.55rem);   /* the bottom rail does not hide it */
+    width: min(10.25rem, calc(100vw - 1.4rem));
+    max-height: 45vh;
+    z-index: 6;
+  }
+  html body #mm-panel #mm-body { max-height: 40vh; }
+}
+
+/* ---------------------------------------------------------------------------
+   7. Telemetry and hero readouts wrap instead of clipping
+   ------------------------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  /* hero-status / hero-* are written by ui/hero.js at runtime, after this file,
+     so each selector carries the #masthead id to win the tie. */
+  html body #masthead .hero-status {
+    gap: 0.7rem 1.05rem;
+    flex-wrap: wrap;
+  }
+  html body #masthead .hero-cell {
+    min-width: 4.5rem;
+    flex: 0 1 auto;
+  }
+  html body #masthead .hero-key {
+    letter-spacing: 0.1em;
+    overflow-wrap: anywhere;
+  }
+  html body #masthead .hero-val {
+    white-space: normal;        /* the UTC stamp is the longest string on the page */
+    overflow-wrap: anywhere;
+  }
+
+  /* Readout / control readouts: allow the value to break rather than push out. */
+  .readout { min-width: 0; max-width: 100%; }
+  .cell { min-width: 0; }
+  .cell-label { overflow-wrap: anywhere; }
+  .cell-value { overflow-wrap: anywhere; }
+  .control-head { flex-wrap: wrap; }
+  .control-value { min-width: 0; }
+  .control-label { overflow-wrap: anywhere; }
+}
+
+/* ---------------------------------------------------------------------------
+   8. Panels that could overflow put the scroll on themselves
+   ------------------------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  .figure-holder,
+  .readout-holder,
+  .controls-holder,
+  .checks-holder {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Wide content is contained by the panel above, so it can never widen the
+     page: it becomes a sideways scroll inside the panel instead. */
+  .figure-holder > *,
+  .readout-holder > *,
+  .controls-holder > *,
+  .checks-holder > * { max-width: 100%; }
+  .figure-holder svg,
+  .figure-holder canvas,
+  figure > svg,
+  figure > canvas { max-width: 100%; }
+
+  .prose .math { white-space: normal; }   /* a long formula may wrap, not push */
+}
+
+/* ---------------------------------------------------------------------------
+   9. Phones, <=430px — a tighter measure and a shorter hero
+   ------------------------------------------------------------------------- */
+
+@media (max-width: 430px) {
+  :root { --m-gutter: 1.7rem; }
+
+  #masthead { padding: 11vh 0 7vh; }
+  .chapter { padding: 12vh 0 8vh; }
+
+  #masthead h1 { letter-spacing: -0.03em; }
+
+  .controls-holder,
+  .readout-holder,
+  .checks-holder,
+  .figure-holder { padding: 0.9rem 0.85rem 1rem; }
+
+  html body #masthead .hero-cell { flex: 1 1 6.5rem; min-width: 0; }
+
+  .check-q { font-size: var(--fs-300); }
+
+  /* Last-resort guard: a single stray wide child can clip, but can never drag
+     a horizontal scrollbar onto the page. Fixed layers are unaffected. */
+  body { overflow-x: clip; }
+
+  /* The HUD is a corner instrument on a phone: drop the note, keep the plot. */
+  html body #mm-panel .mm-caption { display: none; }
+}
+
+/* ---------------------------------------------------------------------------
+   10. Phones: the progress meter must not push the chapter buttons off-screen.
+   Measured at 390px: the nine .railtrack-tick chips are ~400px wide, so the
+   bar opened showing only the meter and the first .rail-item began at x=423 —
+   past the right edge. Keep the compact document-progress line, let the rail
+   buttons do the navigating.
+   ------------------------------------------------------------------------- */
+
+@media (max-width: 560px) {
+  html body #rail .railtrack-tick { display: none; }
+}

@@ -48,7 +48,10 @@ const POLISH_SPEC = [
   ['apply', './gl/satmodel.js'],
   ['apply', './gl/groundtrack.js'],
   ['apply', './gl/horizon.js'],
-  ['apply', './fx/aberration.js'],
+  ['apply', './gl/satglow.js'],
+  ['apply', './gl/terminator.js'],
+  ['apply', './gl/compose.js'],
+  ['apply', './ui/satlabels.js'],
   ['apply', './ui/scrolly.js'],
   ['apply', './ui/tooltips.js']
 ];

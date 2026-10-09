@@ -1,0 +1,388 @@
+/* css/print.css — the print stylesheet for "Where You Are".
+   ------------------------------------------------------------------
+   Owned file: this is the only file this author touches. It is loaded last
+   (after base.css's own small @media print block, and after theme / explainer /
+   figures), so it refines that block where they overlap. No @import, no
+   external assets, no build step.
+
+   Everything lives inside `@media print`, so if this file is ever linked
+   without `media="print"` the on-screen cascade is untouched — the screen
+   never sees a single one of these rules. That is what keeps the render
+   gate (node tools/verify-page.mjs) green and the screen layout identical.
+
+   What it does, in one line: white paper, near-black serif text at a reading
+   measure; the sky, rail, HUD and interaction hints are gone; prose, control
+   labels+values, figures+captions and every check survive; each chapter starts
+   a fresh page; link URLs are printed.
+   ------------------------------------------------------------------ */
+
+@page { margin: 18mm 16mm; }
+
+@media print {
+
+  /* ================================================================
+     1. THE PAGE — white paper, near-black ink, serif at a measure
+     ================================================================ */
+
+  html, body {
+    background: #fff !important;
+    color: #111 !important;
+    color-scheme: light;
+  }
+
+  body {
+    font-family: var(--serif, "Iowan Old Style", Palatino, Georgia, "Times New Roman", serif);
+    font-size: 11pt;
+    line-height: 1.5;
+    -webkit-font-smoothing: auto;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* the reading column: drop the 30vh of scroll padding and the left gutter */
+  #story {
+    width: auto;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+  #masthead { padding: 0 0 1.2rem; }
+  #colophon { margin-top: 1.6rem; padding-top: 1rem; }
+
+  /* a sensible measure for prose and the hero paragraph
+     (`!important` so the screen-only 100%/32rem overrides cannot win in print) */
+  #story .prose,
+  #story .prose .pull,
+  #story .pull,
+  .prose,
+  #masthead .lede,
+  .pull,
+  .chapter-kicker,
+  .check-q,
+  .check-why { max-width: 40rem !important; }
+
+  /* ---------- type ---------- */
+
+  #masthead h1 {
+    font-family: var(--serif, Georgia, serif);
+    font-size: 28pt;
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+    color: #111 !important;
+    text-shadow: none !important;
+    margin: 0 0 0.6rem;
+    text-wrap: balance;
+  }
+  #masthead .kicker {
+    font-size: 9pt;
+    letter-spacing: 0.18em;
+    color: #333 !important;
+  }
+  #masthead .kicker::before { background: #999 !important; }
+  #masthead .lede { color: #333 !important; font-size: 12pt; line-height: 1.45; }
+  #masthead .meta { color: #444 !important; font-size: 9pt; }
+
+  .chapter h2 {
+    font-family: var(--serif, Georgia, serif);
+    font-size: 17pt;
+    line-height: 1.15;
+    letter-spacing: -0.005em;
+    color: #111 !important;
+    margin: 0 0 0.35rem;
+    text-wrap: balance;
+  }
+  .chapter-number {
+    color: #555 !important;
+    font-size: 9pt;
+    letter-spacing: 0.2em;
+  }
+  .chapter-number::before { background: #999 !important; }
+  .chapter-kicker { color: #333 !important; font-size: 10pt; }
+
+  .prose h3.sub {
+    font-family: var(--sans, system-ui, sans-serif);
+    font-size: 9.5pt;
+    letter-spacing: 0.14em;
+    color: #333 !important;
+    margin: 1.6rem 0 0.5rem;
+  }
+
+  /* ---------- the prose itself ---------- */
+
+  #story .prose,
+  #story .prose p,
+  #story .prose li,
+  #story .prose ul,
+  #story .prose ol { color: #111 !important; }
+
+  #story .prose p { margin: 0 0 0.7rem; }
+  #story .prose strong { color: #111 !important; font-weight: 600; }
+  #story .prose em { color: #111 !important; }
+
+  #story .prose code {
+    background: #f2f2f2 !important;
+    border: 1px solid #ccc !important;
+    color: #111 !important;
+  }
+  #story .prose .math {
+    color: #111 !important;
+    white-space: nowrap;
+  }
+  #story .prose .caption {
+    color: #444 !important;
+    font-size: 9pt;
+  }
+
+  #story .prose blockquote,
+  #story .pull {
+    color: #333 !important;
+    border-left-color: #999 !important;
+  }
+  #story .pull { color: #111 !important; font-size: 13pt; }
+
+  /* ---------- links: show where they go ---------- */
+
+  #story a,
+  #masthead a { color: #0645ad !important; text-decoration: underline; text-underline-offset: 2px; }
+
+  a[href]::after {
+    content: " \00a0(" attr(href) ")";
+    font-size: 0.82em;
+    color: #444 !important;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+  }
+  /* never print the URL of an in-page anchor */
+  a[href^="#"]::after { content: none !important; }
+
+  /* ================================================================
+     2. THE FURNITURE WE DROP — the sky, the rail, the HUD, the grain,
+        and every hint that only makes sense with a mouse and a canvas
+     ================================================================ */
+
+  /* the sticky WebGL sky and everything painted on it */
+  #sky,
+  #gl,
+  #grain,
+  #sky-hint,
+  /* the chapter rail and its scroll-progress track */
+  #rail,
+  .railtrack,
+  /* fixed HUD panels and floating overlays over the canvas */
+  #mm-panel,
+  .mm-panel,
+  #sky-labels,
+  .labels-layer,
+  #sky-labels .label,
+  /* the live masthead telemetry strip and the "scroll to begin" cue */
+  #masthead .hero-status,
+  #masthead .hero-cue,
+  /* the keyboard skip link is dead on paper */
+  .skip { display: none !important; }
+
+  /* ================================================================
+     3. CONTROLS — keep the label and its current value as a static
+        readout; drop the input itself
+     ================================================================ */
+
+  .controls-holder,
+  .checks-holder,
+  .readout-holder,
+  .figure-holder {
+    background: none !important;
+    border: 1px solid #bbb !important;
+    border-radius: 4px !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    padding: 0.75rem 0.9rem !important;
+    margin: 1.2rem 0 0 !important;
+  }
+  /* the instrument-panel corner tick and gauge decorations are screen-only */
+  .controls-holder::after,
+  .checks-holder::after,
+  .readout-holder::after { content: none !important; }
+
+  .controls-title,
+  .checks-title,
+  .readout-title {
+    color: #333 !important;
+    font-size: 9pt;
+    margin: 0 0 0.6rem;
+  }
+  .controls-title::before,
+  .checks-title::before,
+  .readout-title::before { background: #999 !important; }
+
+  /* drop the widgets */
+  .control input,
+  .control select,
+  .control button,
+  .control-body { display: none !important; }
+
+  /* the surviving line reads as "Label: value" */
+  .controls { display: block !important; }
+  .control {
+    display: block !important;
+    margin: 0 0 0.35rem;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .control-head {
+    display: block !important;
+    text-align: left;
+  }
+  .control-label {
+    font-family: var(--sans, system-ui, sans-serif);
+    font-size: 10pt;
+    letter-spacing: 0;
+    text-transform: none;
+    color: #333 !important;
+  }
+  .control-label::after { content: ": "; }
+  .control-value {
+    font-size: 10pt;
+    color: #111 !important;
+    background: none !important;
+    border: 0 !important;
+    padding: 0 !important;
+    min-width: 0 !important;
+    text-align: left !important;
+    line-height: inherit;
+  }
+  .hint {
+    color: #444 !important;
+    font-size: 9pt;
+    margin: 0.1rem 0 0.6rem;
+  }
+
+  /* buttons have no value to read: the label alone survives */
+  .control .btn { display: none !important; }
+
+  /* ================================================================
+     4. READOUTS — the little gauges, flattened to ink on paper
+     ================================================================ */
+
+  .readout {
+    grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr)) !important;
+    gap: 0.5rem 0.8rem !important;
+  }
+  .cell {
+    background: none !important;
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+    padding: 0.35rem 0.45rem !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .cell::before { content: none !important; }
+  .cell-label { color: #444 !important; font-size: 8pt; }
+  .cell-value { color: #111 !important; font-size: 11pt; }
+
+  /* ================================================================
+     5. CHECKS — the question, every option, the answer marked, and
+        the explanation, kept whole
+     ================================================================ */
+
+  .check {
+    color: #111 !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .check + .check {
+    border-top: 1px dashed #999 !important;
+  }
+  .check-q { color: #111 !important; font-size: 11pt; margin-bottom: 0.6rem; }
+
+  .option {
+    background: none !important;
+    border: 1px solid #bbb !important;
+    color: #111 !important;
+    padding: 0.35rem 0.6rem !important;
+  }
+  .option-mark {
+    color: #111 !important;
+    background: none !important;
+    border: 1px solid #999 !important;
+  }
+  /* greyscale-safe: the chosen/correct answers carry a glyph, not just a hue */
+  .option.is-right,
+  .option.is-wrong {
+    background: none !important;
+    border-color: #111 !important;
+    color: #111 !important;
+    font-weight: 600 !important;
+  }
+  .option.is-right .option-mark::after { content: " \2713"; }   /* check */
+  .option.is-wrong .option-mark::after { content: " \2717"; }   /* ballot cross */
+  .option:disabled { opacity: 1 !important; }
+  .option:disabled:not(.is-right):not(.is-wrong) { opacity: 1 !important; }
+
+  .check-why {
+    color: #333 !important;
+    background: none !important;
+    border: 1px solid #bbb !important;
+    border-left: 3px solid #999 !important;
+    border-radius: 0 4px 4px 0 !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  /* the JS hides the explanation until the reader answers; on paper the
+     answered explanation is the whole point, so unhide it — but an empty
+     one (never answered) stays out of the way */
+  .check-why[hidden] { display: block !important; }
+  .check-why:empty,
+  .check-why[hidden]:empty { display: none !important; }
+  .check-why.is-right,
+  .check-why.is-wrong { border-left-color: #111 !important; }
+  .check-why strong { color: #111 !important; }
+
+  /* ================================================================
+     6. FIGURES AND CAPTIONS — kept, never split across a page
+     ================================================================ */
+
+  figure {
+    margin: 1rem 0;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  figure > svg,
+  figure > canvas,
+  .figure-holder svg,
+  .figure-holder canvas {
+    border: 1px solid #ddd;
+    border-radius: 2px !important;
+  }
+  figcaption {
+    color: #444 !important;
+    border-left-color: #ccc !important;
+    font-size: 9pt;
+  }
+
+  /* ================================================================
+     7. PAGINATION — a new page per chapter, no orphaned headings
+     ================================================================ */
+
+  /* every chapter section starts on a fresh sheet: 9 chapters -> 9 breaks */
+  .chapter {
+    opacity: 1 !important;
+    break-before: page;
+    page-break-before: always;
+    padding: 0 0 1.5rem !important;
+    border-top: 0 !important;
+  }
+
+  /* a heading never dangles at the foot of a page */
+  h1, h2, h3, h4,
+  .chapter-head {
+    break-after: avoid;
+    page-break-after: avoid;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .chapter-head { margin-bottom: 1rem; }
+
+  /* keep paragraphs and list items from stranding single lines */
+  p, li, blockquote, figcaption,
+  .check-q, .check-why { orphans: 3; widows: 3; }
+
+}
