@@ -1,12 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Where You Are">
-  <rect width="64" height="64" rx="12" fill="#05070c"/>
-  <circle cx="32" cy="40" r="13" fill="none" stroke="#2b6bb5" stroke-width="2"/>
-  <ellipse cx="32" cy="40" rx="13" ry="4.5" fill="none" stroke="#6fb2ff" stroke-width="1.6"/>
-  <path d="M32 40 L46 18" stroke="#ffc969" stroke-width="1.8" stroke-dasharray="3 3"/>
-  <g fill="#ffc969">
-    <circle cx="46" cy="18" r="3.4"/>
-    <circle cx="19" cy="21" r="2.4"/>
-    <circle cx="52" cy="35" r="2.4"/>
-  </g>
-  <circle cx="32" cy="40" r="2.6" fill="#63d99a"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" aria-label="Where You Are" role="img" viewBox="0 0 64 64"><rect width="64" height="64" fill="#05070c" rx="12"/><circle cx="32" cy="40" r="13" fill="none" stroke="#2b6bb5" stroke-width="2"/><ellipse cx="32" cy="40" fill="none" stroke="#6fb2ff" stroke-width="1.6" rx="13" ry="4.5"/><path stroke="#ffc969" stroke-dasharray="3 3" stroke-width="1.8" d="M32 40 L46 18"/><g fill="#ffc969"><circle cx="46" cy="18" r="3.4"/><circle cx="19" cy="21" r="2.4"/><circle cx="52" cy="35" r="2.4"/></g><circle cx="32" cy="40" r="2.6" fill="#63d99a"/></svg>
