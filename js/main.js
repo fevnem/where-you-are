@@ -43,19 +43,45 @@ const POLISH_SPEC = [
   ['createGlowPool', './gl/glow.js'],
   ['createTrails', './gl/trails.js'],
   ['createCityLights', './gl/city.js'],
-  ['createEarth', './gl/earth-material.js']
+  ['createEarth', './gl/earth-material.js'],
+  ['apply', './ui/minimap.js'],
+  ['apply', './gl/satmodel.js'],
+  ['apply', './gl/groundtrack.js'],
+  ['apply', './gl/horizon.js'],
+  ['apply', './fx/aberration.js'],
+  ['apply', './ui/scrolly.js'],
+  ['apply', './ui/tooltips.js']
 ];
 
+/**
+ * Load every optional module. A module may either
+ *   (a) export `apply(globalCtx)` — the preferred hook, self-wiring, or
+ *   (b) export one of the named factories above (older shape).
+ * globalCtx = { stage, camera, globe, stars, chapters, state, helpers, doc, app }
+ */
 async function loadPolish() {
   const out = {};
-  for (const [name, file] of POLISH_SPEC) {
+  const files = [...new Set(POLISH_SPEC.map(([, f]) => f))];
+  const target = {};
+  for (const file of files) {
+    let mod;
     try {
-      const mod = await import(file);
-      if (typeof mod[name] === 'function') out[name] = mod[name];
+      mod = await import(file);
     } catch (err) {
       console.warn('[polish] ' + file + ' not applied: ' + err.message);
+      continue;
     }
+    const named = POLISH_SPEC.filter(([, f]) => f === file).map(([n]) => n);
+    for (const name of named) {
+      if (typeof mod[name] === 'function') {
+        target[name] = mod[name];
+        out[name] = mod[name];
+      }
+    }
+    if (typeof mod.apply === 'function') out['__apply'] = out['__apply'] || [];
+    if (typeof mod.apply === 'function') out['__apply'].push({ file, fn: mod.apply });
   }
+  out.__target = target;
   return out;
 }
 
@@ -104,10 +130,21 @@ async function boot() {
     } catch (e) { console.warn('[earth]', e); }
   }
 
+  // self-wiring modules: export apply(globalCtx) and they are called here, after
+  // chapters and the named factories exist.
+  const globalCtx = { stage, camera, globe, stars, chapters, state, helpers: { geo, kepler, tri, vocab, P }, doc: document, app: null };
+  for (const { file, fn } of (polish.__apply || [])) {
+    try {
+      const r = fn(globalCtx);
+      if (r) state[file] = r;
+    } catch (e) { console.warn('[polish apply ' + file + ']', e); }
+  }
+
   window.APP = {
     stage, camera, globe, stars, chapters, state, polish,
     activate, pickActive, helpers: { geo, kepler, tri, vocab, P }
   };
+  globalCtx.app = window.APP;
 }
 
 /* ---------------- article ---------------- */

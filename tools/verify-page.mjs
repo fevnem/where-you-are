@@ -215,11 +215,25 @@ check('the browser build of the solver recovers a known position', mathInBrowser
 const activated = await cdp.eval(`(async () => {
   const a = window.APP;
   const out = [];
+  // The page uses scroll-behavior: smooth, so scrollIntoView() animates. Reading
+  // state.active on a fixed timer therefore races the animation (this made the
+  // harness flaky ~1 run in 4). Scroll instantly and wait for scrollY to settle.
+  const settle = async () => {
+    let last = -1;
+    for (let i = 0; i < 60; i++) {
+      const y = window.scrollY;
+      if (y === last) return true;
+      last = y;
+      await new Promise(r => setTimeout(r, 40));
+    }
+    return false;
+  };
   for (const ch of a.chapters) {
-    document.getElementById(ch.id).scrollIntoView({ block: 'start' });
-    await new Promise(r => setTimeout(r, 220));
+    const el = document.getElementById(ch.id);
+    el.scrollIntoView({ block: 'start', behavior: 'instant' });
+    await settle();
     a.pickActive();
-    await new Promise(r => setTimeout(r, 220));
+    await new Promise(r => setTimeout(r, 90));
     out.push({ id: ch.id, active: a.state.active, scene: !!a.state.scene, actors: a.stage.actors().opaque.length + a.stage.actors().transparent.length + a.stage.actors().overlay.length });
   }
   return out;
@@ -234,7 +248,7 @@ if (ONLY) {
   const one = activated.find((r) => r.id === ONLY);
   check(`${ONLY} mounts its own geometry`, !!one && one.scene && one.actors > 3, one ? one.actors + ' actors' : 'missing');
   await cdp.viewport(WIDTH, HEIGHT);
-  await cdp.eval(`document.getElementById('${ONLY}').scrollIntoView({ block: 'start' }); window.APP.pickActive();`);
+  await cdp.eval(`document.getElementById('${ONLY}').scrollIntoView({ block: 'start', behavior: 'instant' }); window.APP.pickActive();`);
   await sleep(900);
   await cdp.shot(path.join(OUT, 'ch-' + ONLY + '.png'));
   console.log('  shot ' + path.join(OUT, 'ch-' + ONLY + '.png'));
@@ -243,17 +257,22 @@ if (ONLY) {
 // --- controls move the numbers ---
 const controlRun = await cdp.eval(`(async () => {
   const a = window.APP;
+  const settle = async () => { let last = -1; for (let i = 0; i < 60; i++) { const y = window.scrollY; if (y === last) return; last = y; await new Promise(r => setTimeout(r, 40)); } };
   const ch = a.chapters.find(c => (c.controls || []).some(x => x.type === 'range'));
-  document.getElementById(ch.id).scrollIntoView({ block: 'start' });
-  await new Promise(r => setTimeout(r, 320));
+  document.getElementById(ch.id).scrollIntoView({ block: 'start', behavior: 'instant' });
+  await settle();
+  // make sure the chapter we are about to drive really is the active one
+  for (let i = 0; i < 5 && a.state.active !== ch.id; i++) { a.pickActive(); await new Promise(r => setTimeout(r, 80)); }
   const spec = ch.controls.find(x => x.type === 'range');
   const input = document.querySelector('[data-control="' + spec.id + '"] input');
   const before = a.state.ctx.params[spec.id];
   input.value = String(Number(spec.max));
   input.dispatchEvent(new Event('input', { bubbles: true }));
   await new Promise(r => setTimeout(r, 120));
-  return { id: spec.id, before, after: a.state.ctx.params[spec.id], readout: document.querySelector('[data-control="' + spec.id + '"] .control-value').textContent };
+  return { chapter: ch.id, active: a.state.active, id: spec.id, before, after: a.state.ctx.params[spec.id], readout: document.querySelector('[data-control="' + spec.id + '"] .control-value').textContent };
 })()`);
+check('the control test drives the chapter it meant to', controlRun.active === controlRun.chapter,
+  `active ${controlRun.active}, drove ${controlRun.chapter}`);
 check('a control writes through to the scene parameters',
   controlRun.after !== controlRun.before, `${controlRun.id}: ${controlRun.before} -> ${controlRun.after}`);
 check('and updates its readout', !!controlRun.readout, controlRun.readout);
@@ -286,18 +305,18 @@ for (const [w, h, label] of [[1440, 900, 'desktop'], [900, 820, 'tablet'], [390,
 
 // --- screenshots for the repo ---
 await cdp.viewport(1440, 900);
-await cdp.eval(`window.scrollTo({ top: 0 }); document.getElementById('masthead').scrollIntoView({ block: 'start' });`);
+await cdp.eval(`window.scrollTo({ top: 0, behavior: 'instant' }); document.getElementById('masthead').scrollIntoView({ block: 'start', behavior: 'instant' });`);
 await sleep(900);
 await cdp.shot(path.join(OUT, '01-title.png'));
-await cdp.eval(`document.getElementById(window.APP.chapters[0].id).scrollIntoView({ block: 'start' });`);
+await cdp.eval(`document.getElementById(window.APP.chapters[0].id).scrollIntoView({ block: 'start', behavior: 'instant' });`);
 await sleep(900);
 await cdp.shot(path.join(OUT, '02-chapter.png'));
 const mid = await cdp.eval(`window.APP.chapters[Math.min(3, window.APP.chapters.length - 1)].id`);
-await cdp.eval(`document.getElementById('${mid}').scrollIntoView({ block: 'start' });`);
+await cdp.eval(`document.getElementById('${mid}').scrollIntoView({ block: 'start', behavior: 'instant' });`);
 await sleep(900);
 await cdp.shot(path.join(OUT, '03-chapter-' + mid + '.png'));
 await cdp.viewport(390, 780);
-await cdp.eval(`window.scrollTo({ top: 0 }); document.getElementById('masthead').scrollIntoView({ block: 'start' });`);
+await cdp.eval(`window.scrollTo({ top: 0, behavior: 'instant' }); document.getElementById('masthead').scrollIntoView({ block: 'start', behavior: 'instant' });`);
 await sleep(700);
 await cdp.shot(path.join(OUT, '04-phone.png'));
 console.log('  shots written to ' + OUT);
